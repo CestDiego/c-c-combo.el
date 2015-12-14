@@ -87,13 +87,14 @@
   "Toggle Combo mode."
   (interactive)
   (if C-c-combo-mode
-      (C-c-combo--deactivate)
-    (C-c-combo--activate)))
+      (C-c-combo--activate)
+    (C-c-combo--deactivate)))
 
 ;;;###autoload
 (define-minor-mode C-c-combo-mode
   "C-c-combo"
-  :lighter ""
-  :init-value nil
   :global t
+  :lighter ""
+  :keymap nil
+  :init-value nil
   (C-c-combo--toggle))
