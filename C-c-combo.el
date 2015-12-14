@@ -28,6 +28,8 @@
   "Characters per second Target Rate")
 (defvar C-c-combo-check-timer nil
   "Timer that checks if we are over the target CPS")
+(defvar C-c-combo--counter 0
+  "Stores how many seconds you have been with acceptable wpm")
 
 (defun C-c-combo-set-target-rate (rate)
   (setq C-c-combo--target-wpm rate
@@ -42,11 +44,19 @@
          (chars-per-sec (/ chars-per-min 60.0)))
     chars-per-sec))
 
+(defun make-sound ()
+  (message "sth"))
+
+(defun do-it ()
+  (when (equal (mod C-c-combo--counter 3) 0)
+    (make-sound))
+  (setq C-c-combo--counter (1+ C-c-combo--counter)))
+
 (defun C-c-combo--check-if-over-target-rate ()
   (setq C-c-combo--curr-cps (C-c-combo--compute-cps))
   (if (> C-c-combo--curr-cps C-c-combo--target-cps)
-      (message "Now")
-    (message "not yet")))
+      (do-it)
+    (setq C-c-combo--counter 0)))
 
 (defun C-c-combo--compute-cps ()
   (let* ((now      (C-c-combo--current-time-in-seconds))
