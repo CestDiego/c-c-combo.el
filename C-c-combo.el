@@ -33,8 +33,7 @@
 (defvar C-c-combo--counter 0
   "Stores how many seconds you have been with acceptable wpm")
 
-;; (defconst C-c-combo--files-path (file-name-directory load-file-name))
-(setq C-c-combo--files-path "/home/jarvis/Projects/C-c-combo/")
+(defconst C-c-combo--files-path (file-name-directory load-file-name))
 (setq C-c-combo--announcer-files-path '())
 
 (defun C-c-combo--get-random-vpos (vpos)
