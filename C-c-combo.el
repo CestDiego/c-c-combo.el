@@ -1,22 +1,33 @@
+;;; C-c-combo.el --- Make stuff happen when you reach a target wpm -*- lexical-binding: t -*-
 ;; Copyright (C) 2015  Diego Berrocal
 
-;; This program is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
+;; Author: Diego Berrocal <cestdiego@gmail.com>
+;; Homepage: https://www.github.com/CestDiego/C-c-combo.el
+;; Created: Tue Dec 15
+;; Version: 0.5
+;; URL: https://github.com/CestDiego/C-c-combo.el
 
+;;; License:
+;;
+;; This file is NOT part of GNU Emacs.
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+;;
 ;; Commentary:
 ;;
-;; This mode is super awesome and you should feel the same about it or else..
+;; This will make sounds appear after you hit more than 60 wpm
 ;;
+;;; Usage:
+;;     (require 'C-c-combo) ;; Not necessary if using ELPA package
+;;     (C-c-combo-mode 1)
 
 (defvar C-c-combo--last-key  '(("timestamp" . 0)
                                ("key" . nil)
