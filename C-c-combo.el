@@ -97,7 +97,7 @@
             (animate-string (string (aref keys 0))
                             row
                             column)
-            (delete-backward-char 1)))))))
+            (delete-char -1)))))))
 
 (defun get-announcer-file-paths ()
   (unless (= 4 (length C-c-combo--announcer-files-path))
