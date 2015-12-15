@@ -20,13 +20,13 @@
 
 (defvar C-c-combo--last-key  '(("timestamp" . 0)
                                ("key" . nil)
-                               ("repeated?". nil))
+                               ("n-repeats". 0))
   "Cons Cell, first item is timestamp second is the key")
 (defvar C-c-combo--curr-cps  0
   "Moving Average Rate in Characters per second")
 (defvar C-c-combo--target-wpm 60.0
   "Words per Minute Target Rate")
-(defvar C-c-combo--target-cps 5.83
+(defvar C-c-combo--target-cps 4.0
   "Characters per second Target Rate")
 (defvar C-c-combo-check-timer nil
   "Timer that checks if we are over the target CPS")
@@ -57,7 +57,7 @@
   (string-to-number (format-time-string "%s.%3N" (current-time))))
 
 (defun C-c-combo--wpm-to-cps (rate-wpm)
-  (let* ((chars-in-word 5)
+  (let* ((chars-in-word 4.0)
          (chars-per-min (* rate-wpm chars-in-word))
          (chars-per-sec (/ chars-per-min 60.0)))
     chars-per-sec))
@@ -75,18 +75,24 @@
       (C-c-combo--play-sound-file current-sound))))
 
 (defun C-c-combo--encourage-user ()
-  (when (equal (mod C-c-combo--counter 5) 0)
+  (when (and (not (equal C-c-combo--counter 0))
+             (equal (mod C-c-combo--counter 5) 0))
     (C-c-combo--play-announcer-sound))
+  (when (equal C-c-combo--counter 15)
+    (add-hook 'post-self-insert-hook #'le-animate))
   (setq C-c-combo--counter (1+ C-c-combo--counter)))
 
 (defun C-c-combo--check-if-over-target-rate ()
-  (let ((repeated? (assoc-default "repeated?" C-c-combo--last-key))
+  (let ((n-repeats (assoc-default "n-repeats" C-c-combo--last-key))
         (computed-cps (C-c-combo--compute-cps)))
     (setq C-c-combo--curr-cps computed-cps)
-    (if (and (not repeated?) (> computed-cps C-c-combo--target-cps))
+    (if (and (< n-repeats 3)
+             (> computed-cps C-c-combo--target-cps))
         (C-c-combo--encourage-user)
       (get-announcer-file-paths)
+      (remove-hook 'post-self-insert-hook #'le-animate)
       (setq C-c-combo--counter 0))))
+
 
 (defun C-c-combo--compute-cps ()
   (let* ((now        (C-c-combo--current-time-in-seconds))
@@ -101,15 +107,18 @@
 (defun C-c-combo--process ()
   (with-demoted-errors "Error while running C-c combo: %s"
     (when (and (this-command-keys)
-               (derived-mode-p 'prog-mode))
-      (let ((now      (C-c-combo--current-time-in-seconds))
-            (key      (this-command-keys))
-            (last-key (assoc-default "key" C-c-combo--last-key))
-            (new-rate (+ 1 (C-c-combo--compute-cps))))
+               (derived-mode-p 'text-mode))
+      (let* ((now      (C-c-combo--current-time-in-seconds))
+             (key      (this-command-keys))
+             (last-key (assoc-default "key" C-c-combo--last-key))
+             (new-rate (+ 1 (C-c-combo--compute-cps)))
+             (repeated? (equal key last-key))
+             (n-repeats (assoc-default "n-repeats" C-c-combo--last-key)))
         (setq C-c-combo--curr-cps new-rate
               C-c-combo--last-key `(("timestamp" . ,now)
                                     ("key"       . ,key)
-                                    ("repeated?" . ,(equal key last-key))))))))
+                                    ("n-repeats" . ,(if repeated? (1+ n-repeats) 0)))
+              )))))
 
 ;;;###autoload
 (defun C-c-combo--activate ()
