@@ -37,26 +37,26 @@
 (setq C-c-combo--files-path "/home/jarvis/Projects/C-c-combo/")
 (setq C-c-combo--announcer-files-path '())
 
-(defun get-random-vpos (vpos)
+(defun C-c-combo--get-random-vpos (vpos)
   (let ((value (+ vpos (random 3))))
     (if (< value (window-height))
         value
       (1- (window-height)))))
 
-(defun get-random-hpos (hpos)
+(defun C-c-combo--get-random-hpos (hpos)
   (let ((value (+ hpos (random 2))))
     (if (< value (1- (window-width)))
         value
       (- (window-width) 2))))
 
-(defun animate-initialize (string vpos hpos)
+(defun C-c-combo--animate-initialize (string vpos hpos)
   (let ((characters nil))
     (dotimes (i (length string))
       (setq characters
             (cons (list (aref string i)
                         ;; Random starting positions.
-                        (get-random-vpos vpos)
-                        (get-random-hpos hpos)
+                        (C-c-combo--get-random-vpos vpos)
+                        (C-c-combo--get-random-hpos hpos)
                         ;; All the chars should end up
                         ;; on the specified line.
                         vpos
@@ -66,59 +66,20 @@
                   characters)))
     characters))
 
-
-(defun le-animate-string (string vpos hpos)
-  "Display STRING animations starting at position VPOS, HPOS.
-The characters start at randomly chosen places,
-and all slide in parallel to their final positions,
-passing through `animate-n-steps' positions before the final ones.
-If HPOS is nil (or omitted), center the string horizontally
-in the current window."
-  (let ((characters
-         (le-animate-initialize string vpos hpos))
-        (show-trailing-whitespace nil)
-        ;; Make sure indentation does not use tabs.
-        ;; They would confuse things.
-        (indent-tabs-mode nil))
-    (dotimes (i animate-n-steps)
-      ;; Bind buffer-undo-list so it will be unchanged when we are done.
-      ;; (We're going to undo all our changes anyway.)
-      (let (buffer-undo-list
-            list-to-undo)
-        ;; Display the characters at the Ith position.
-        ;; This inserts them in the buffer.
-        (animate-step characters (/ i 1.0 animate-n-steps))
-        ;; Make sure buffer is displayed starting at the beginning.
-        ;; (set-window-start nil 1)
-        ;; Display it, and wait just a little while.
-        ;; (sit-for .05)
-        ;; Now undo the changes we made in the buffer.
-        (setq list-to-undo buffer-undo-list)
-        (while list-to-undo
-          (let ((undo-in-progress t))
-            (setq list-to-undo (primitive-undo 1 list-to-undo))))))
-    ;; Insert the characters in their final positions.
-    (animate-step characters 1)
-    ;; Put the cursor at the end of the text on the line.
-    (end-of-line)
-    ;; Redisplay so they appear on the screen there.
-    (sit-for 0)
-    ;; This is so that the undo command, used afterwards,
-    ;; will undo the "animate" calls one by one.
-    (undo-boundary)))
-
-(defun is-valid (keycode)
+(defun C-c-combo--is-keycode-valid (keycode)
   (and (< keycode ?~) (> keycode ?!)))
 
-(defun le-animate ()
+(defun C-c-combo--animate-insertion ()
   (interactive)
   (with-demoted-errors "C-c-combo combination not catched %s"
     (let ((keys   (this-command-keys-vector))
           (column (current-column))
+          (animate-n-steps 3)
+          (animate-initialize #'C-c-combo--animate-initialize)
           (row    (1- (line-number-at-pos))))
       (when (and (derived-mode-p 'text-mode)
                  (or (evil-insert-state-p) (evil-hybrid-state-p))
-                 (is-valid (aref keys 0))
+                 (C-c-combo--is-keycode-valid (aref keys 0))
                  (= 1 (length keys)))
         (save-excursion
           (when (= (line-end-position) (nth 5 (posn-at-point)))
@@ -126,15 +87,6 @@ in the current window."
                             row
                             column)
             (delete-backward-char 1)))))))
-(setq animate-n-steps 3)
-
-;; Should take Spaces into account
-;; (add-hook 'pre-command-hook #'le-animate)
-;; (remove-hook 'pre-command-hook #'le-animate)
-
-;; (add-hook 'post-command-hook #'le-animate)
-;; (remove-hook 'post-command-hook #'le-animate)
-
 
 (defun get-announcer-file-paths ()
   (unless (= 4 (length C-c-combo--announcer-files-path))
@@ -178,7 +130,7 @@ in the current window."
              (equal (mod C-c-combo--counter 5) 0))
     (C-c-combo--play-announcer-sound))
   (when (equal C-c-combo--counter 15)
-    (add-hook 'post-self-insert-hook #'le-animate))
+    (add-hook 'post-self-insert-hook #'C-c-combo--animate-insertion))
   (setq C-c-combo--counter (1+ C-c-combo--counter)))
 
 (defun C-c-combo--check-if-over-target-rate ()
@@ -189,7 +141,7 @@ in the current window."
              (> computed-cps C-c-combo--target-cps))
         (C-c-combo--encourage-user)
       (get-announcer-file-paths)
-      (remove-hook 'post-self-insert-hook #'le-animate)
+      (remove-hook 'post-self-insert-hook #'C-c-combo--animate-insertion)
       (setq C-c-combo--counter 0))))
 
 
