@@ -45,7 +45,8 @@
   "Stores how many seconds you have been with acceptable wpm")
 
 (defconst C-c-combo--files-path (file-name-directory load-file-name))
-(setq C-c-combo--announcer-files-path '())
+(defvar C-c-combo--announcer-files-path '()
+  "Paths for the announcer sound files")
 
 (defun C-c-combo--get-random-vpos (vpos)
   (let ((value (+ vpos (random 3))))
