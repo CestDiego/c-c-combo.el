@@ -21,13 +21,15 @@
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 ;;
-;; Commentary:
+;;; Commentary:
 ;;
 ;; This will make sounds appear after you hit more than 60 wpm
 ;;
 ;;; Usage:
 ;;     (require 'C-c-combo) ;; Not necessary if using ELPA package
 ;;     (C-c-combo-mode 1)
+
+;;; Code:
 
 (defvar C-c-combo--last-key  '(("timestamp" . 0)
                                ("key" . nil)
@@ -213,3 +215,6 @@
   :keymap nil
   :init-value nil
   (C-c-combo--toggle))
+
+(provide 'C-c-combo)
+;;; C-c-combo.el ends here
