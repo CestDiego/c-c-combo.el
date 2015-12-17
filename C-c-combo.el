@@ -1,11 +1,11 @@
-;;; C-c-combo.el --- Make stuff happen when you reach a target wpm -*- lexical-binding: nil -
+;;; c-c-combo.el --- Make stuff happen when you reach a target wpm -*- lexical-binding: nil -
 ;; Copyright (C) 2015  Diego Berrocal
 
 ;; Author: Diego Berrocal <cestdiego@gmail.com>
-;; Homepage: https://www.github.com/CestDiego/C-c-combo.el
+;; Homepage: https://www.github.com/CestDiego/c-c-combo.el
 ;; Created: Tue Dec 15
 ;; Version: 0.5
-;; URL: https://github.com/CestDiego/C-c-combo.el
+;; URL: https://github.com/CestDiego/c-c-combo.el
 
 ;;; License:
 ;;
@@ -26,50 +26,50 @@
 ;; This will make sounds appear after you hit more than 60 wpm
 ;;
 ;;; Usage:
-;;     (require 'C-c-combo) ;; Not necessary if using ELPA package
-;;     (C-c-combo-mode 1)
+;;     (require 'c-c-combo) ;; Not necessary if using ELPA package
+;;     (c-c-combo-mode 1)
 
 ;;; Code:
 
-(defvar C-c-combo--last-key  '(("timestamp" . 0)
+(defvar c-c-combo--last-key  '(("timestamp" . 0)
                                ("key" . nil)
                                ("n-repeats". 0))
   "Cons Cell, first item is timestamp second is the key")
-(defvar C-c-combo--curr-cps  0
+(defvar c-c-combo--curr-cps  0
   "Moving Average Rate in Characters per second")
-(defvar C-c-combo--target-wpm 60.0
+(defvar c-c-combo--target-wpm 60.0
   "Words per Minute Target Rate")
-(defvar C-c-combo--target-cps 4.0
+(defvar c-c-combo--target-cps 4.0
   "Characters per second Target Rate")
-(defvar C-c-combo-check-timer nil
+(defvar c-c-combo-check-timer nil
   "Timer that checks if we are over the target CPS")
-(defvar C-c-combo--counter 0
+(defvar c-c-combo--counter 0
   "Stores how many seconds you have been with acceptable wpm")
 
-(defconst C-c-combo--files-path (file-name-directory load-file-name))
-(defvar C-c-combo--announcer-files-path '()
+(defconst c-c-combo--files-path (file-name-directory load-file-name))
+(defvar c-c-combo--announcer-files-path '()
   "Paths for the announcer sound files")
 
-(defun C-c-combo--get-random-vpos (vpos)
+(defun c-c-combo--get-random-vpos (vpos)
   (let ((value (+ vpos (random 3))))
     (if (< value (window-height))
         value
       (1- (window-height)))))
 
-(defun C-c-combo--get-random-hpos (hpos)
+(defun c-c-combo--get-random-hpos (hpos)
   (let ((value (+ hpos (random 2))))
     (if (< value (1- (window-width)))
         value
       (- (window-width) 2))))
 
-(defun C-c-combo--animate-initialize (string vpos hpos)
+(defun c-c-combo--animate-initialize (string vpos hpos)
   (let ((characters nil))
     (dotimes (i (length string))
       (setq characters
             (cons (list (aref string i)
                         ;; Random starting positions.
-                        (C-c-combo--get-random-vpos vpos)
-                        (C-c-combo--get-random-hpos hpos)
+                        (c-c-combo--get-random-vpos vpos)
+                        (c-c-combo--get-random-hpos hpos)
                         ;; All the chars should end up
                         ;; on the specified line.
                         vpos
@@ -79,22 +79,22 @@
                   characters)))
     characters))
 
-(defun C-c-combo--is-keycode-valid (keycode)
+(defun c-c-combo--is-keycode-valid (keycode)
   (and (< keycode ?~) (> keycode ?!)))
 
-(defun C-c-combo--animate-insertion ()
+(defun c-c-combo--animate-insertion ()
   (interactive)
-  (with-demoted-errors "C-c-combo combination not catched %s"
+  (with-demoted-errors "c-c-combo combination not catched %s"
     (let ((keys   (this-command-keys-vector))
           (column (current-column))
           (animate-n-steps 3)
-          (animate-initialize #'C-c-combo--animate-initialize)
+          (animate-initialize #'c-c-combo--animate-initialize)
           (row    (1- (line-number-at-pos))))
       (when (and (derived-mode-p 'text-mode)
                  (or (evil-insert-state-p)
                      (evil-hybrid-state-p)
                      (evil-normal-state-p))
-                 (C-c-combo--is-keycode-valid (aref keys 0))
+                 (c-c-combo--is-keycode-valid (aref keys 0))
                  (= 1 (length keys)))
         (save-excursion
           (when (= (line-end-position) (nth 5 (posn-at-point)))
@@ -104,119 +104,119 @@
             (delete-char -1)))))))
 
 (defun get-announcer-file-paths ()
-  (unless (= 4 (length C-c-combo--announcer-files-path))
-    (setq C-c-combo--announcer-files-path
+  (unless (= 4 (length c-c-combo--announcer-files-path))
+    (setq c-c-combo--announcer-files-path
           (mapcar (lambda (file)
                     (expand-file-name
                      (concat file ".wav")
-                     C-c-combo--files-path))
+                     c-c-combo--files-path))
                   '("fatality"
                     "flawless_spree"
                     "unstoppable"
                     "stop_this_modafoca")))))
 
-(defun C-c-combo-set-target-rate (rate)
-  (setq C-c-combo--target-wpm rate
-        C-c-combo--target-cps (C-c-combo--wpm-to-cps rate)))
+(defun c-c-combo-set-target-rate (rate)
+  (setq c-c-combo--target-wpm rate
+        c-c-combo--target-cps (c-c-combo--wpm-to-cps rate)))
 
-(defun C-c-combo--current-time-in-seconds ()
+(defun c-c-combo--current-time-in-seconds ()
   (string-to-number (format-time-string "%s.%3N" (current-time))))
 
-(defun C-c-combo--wpm-to-cps (rate-wpm)
+(defun c-c-combo--wpm-to-cps (rate-wpm)
   (let* ((chars-in-word 4.0)
          (chars-per-min (* rate-wpm chars-in-word))
          (chars-per-sec (/ chars-per-min 60.0)))
     chars-per-sec))
 
 ;;;###autoload
-(defun C-c-combo--play-sound-file (path)
+(defun c-c-combo--play-sound-file (path)
   (if (eq system-type 'darwin)
       (start-process "*Messages*" nil "afplay" path)
     (start-process "*Messages*" nil "aplay" path)))
 
-(defun C-c-combo--play-announcer-sound ()
+(defun c-c-combo--play-announcer-sound ()
   "This will end when our list ends."
-  (let ((current-sound (pop C-c-combo--announcer-files-path)))
+  (let ((current-sound (pop c-c-combo--announcer-files-path)))
     (when current-sound
-      (C-c-combo--play-sound-file current-sound))))
+      (c-c-combo--play-sound-file current-sound))))
 
-(defun C-c-combo--encourage-user ()
-  (when (and (not (equal C-c-combo--counter 0))
-             (equal (mod C-c-combo--counter 5) 0))
-    (C-c-combo--play-announcer-sound))
-  (when (equal C-c-combo--counter 15)
-    (add-hook 'post-self-insert-hook #'C-c-combo--animate-insertion))
-  (setq C-c-combo--counter (1+ C-c-combo--counter)))
+(defun c-c-combo--encourage-user ()
+  (when (and (not (equal c-c-combo--counter 0))
+             (equal (mod c-c-combo--counter 5) 0))
+    (c-c-combo--play-announcer-sound))
+  (when (equal c-c-combo--counter 15)
+    (add-hook 'post-self-insert-hook #'c-c-combo--animate-insertion))
+  (setq c-c-combo--counter (1+ c-c-combo--counter)))
 
-(defun C-c-combo--check-if-over-target-rate ()
-  (let ((n-repeats (assoc-default "n-repeats" C-c-combo--last-key))
-        (computed-cps (C-c-combo--compute-cps)))
-    (setq C-c-combo--curr-cps computed-cps)
+(defun c-c-combo--check-if-over-target-rate ()
+  (let ((n-repeats (assoc-default "n-repeats" c-c-combo--last-key))
+        (computed-cps (c-c-combo--compute-cps)))
+    (setq c-c-combo--curr-cps computed-cps)
     (if (and (< n-repeats 3)
-             (> computed-cps C-c-combo--target-cps))
-        (C-c-combo--encourage-user)
+             (> computed-cps c-c-combo--target-cps))
+        (c-c-combo--encourage-user)
       (get-announcer-file-paths)
-      (remove-hook 'post-self-insert-hook #'C-c-combo--animate-insertion)
-      (setq C-c-combo--counter 0))))
+      (remove-hook 'post-self-insert-hook #'c-c-combo--animate-insertion)
+      (setq c-c-combo--counter 0))))
 
 
-(defun C-c-combo--compute-cps ()
-  (let* ((now        (C-c-combo--current-time-in-seconds))
-         (last-time  (assoc-default "timestamp" C-c-combo--last-key))
+(defun c-c-combo--compute-cps ()
+  (let* ((now        (c-c-combo--current-time-in-seconds))
+         (last-time  (assoc-default "timestamp" c-c-combo--last-key))
          (interval   (- now last-time))
-         (exponent   (* interval C-c-combo--target-cps))
-         (base       (- 1.0 (/ 1.0 C-c-combo--target-cps)))
+         (exponent   (* interval c-c-combo--target-cps))
+         (base       (- 1.0 (/ 1.0 c-c-combo--target-cps)))
          (decay-factor (expt base exponent))
-         (new-rate (* C-c-combo--curr-cps decay-factor)))
+         (new-rate (* c-c-combo--curr-cps decay-factor)))
     new-rate))
 
-(defun C-c-combo--process ()
+(defun c-c-combo--process ()
   (with-demoted-errors "Error while running C-c combo: %s"
     (when (and (this-command-keys)
                (derived-mode-p 'text-mode))
-      (let* ((now      (C-c-combo--current-time-in-seconds))
+      (let* ((now      (c-c-combo--current-time-in-seconds))
              (key      (this-command-keys))
-             (last-key (assoc-default "key" C-c-combo--last-key))
-             (new-rate (+ 1 (C-c-combo--compute-cps)))
+             (last-key (assoc-default "key" c-c-combo--last-key))
+             (new-rate (+ 1 (c-c-combo--compute-cps)))
              (repeated? (equal key last-key))
-             (n-repeats (assoc-default "n-repeats" C-c-combo--last-key)))
-        (setq C-c-combo--curr-cps new-rate
-              C-c-combo--last-key `(("timestamp" . ,now)
+             (n-repeats (assoc-default "n-repeats" c-c-combo--last-key)))
+        (setq c-c-combo--curr-cps new-rate
+              c-c-combo--last-key `(("timestamp" . ,now)
                                     ("key"       . ,key)
                                     ("n-repeats" . ,(if repeated? (1+ n-repeats) 0)))
               )))))
 
 ;;;###autoload
-(defun C-c-combo--activate ()
+(defun c-c-combo--activate ()
   "Activates Combo mode."
-  (setq C-c-combo-check-timer (run-at-time
+  (setq c-c-combo-check-timer (run-at-time
                                "1 second"
                                1
-                               'C-c-combo--check-if-over-target-rate))
-  (add-hook 'pre-command-hook #'C-c-combo--process))
+                               'c-c-combo--check-if-over-target-rate))
+  (add-hook 'pre-command-hook #'c-c-combo--process))
 
 ;;;###autoload
-(defun C-c-combo--deactivate ()
+(defun c-c-combo--deactivate ()
   "Deactivates Combo mode, and deletes timer."
-  (remove-hook 'pre-command-hook #'C-c-combo--process)
-  (cancel-timer C-c-combo-check-timer))
+  (remove-hook 'pre-command-hook #'c-c-combo--process)
+  (cancel-timer c-c-combo-check-timer))
 
 ;;;###autoload
-(defun C-c-combo--toggle ()
+(defun c-c-combo--toggle ()
   "Toggle Combo mode."
   (interactive)
-  (if C-c-combo-mode
-      (C-c-combo--activate)
-    (C-c-combo--deactivate)))
+  (if c-c-combo-mode
+      (c-c-combo--activate)
+    (c-c-combo--deactivate)))
 
 ;;;###autoload
-(define-minor-mode C-c-combo-mode
-  "C-c-combo"
+(define-minor-mode c-c-combo-mode
+  "c-c-combo"
   :global t
   :lighter nil
   :keymap nil
   :init-value nil
-  (C-c-combo--toggle))
+  (c-c-combo--toggle))
 
-(provide 'C-c-combo)
-;;; C-c-combo.el ends here
+(provide 'c-c-combo)
+;;; c-c-combo.el ends here
