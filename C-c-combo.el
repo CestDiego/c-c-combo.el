@@ -91,7 +91,9 @@
           (animate-initialize #'C-c-combo--animate-initialize)
           (row    (1- (line-number-at-pos))))
       (when (and (derived-mode-p 'text-mode)
-                 (or (evil-insert-state-p) (evil-hybrid-state-p))
+                 (or (evil-insert-state-p)
+                     (evil-hybrid-state-p)
+                     (evil-normal-state-p))
                  (C-c-combo--is-keycode-valid (aref keys 0))
                  (= 1 (length keys)))
         (save-excursion
