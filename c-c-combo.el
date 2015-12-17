@@ -46,7 +46,8 @@
 (defvar c-c-combo--counter 0
   "Stores how many seconds you have been with acceptable wpm")
 
-(defconst c-c-combo--files-path (file-name-directory load-file-name))
+;; (defconst c-c-combo--files-path (file-name-directory load-file-name))
+(setq c-c-combo--files-path "/home/jarvis/Projects/c-c-combo.el/")
 (defvar c-c-combo--announcer-files-path '()
   "Paths for the announcer sound files")
 
@@ -103,7 +104,7 @@
                             column)
             (delete-char -1)))))))
 
-(defun get-announcer-file-paths ()
+(defun c-c-combo-get-announcer-file-paths ()
   (unless (= 4 (length c-c-combo--announcer-files-path))
     (setq c-c-combo--announcer-files-path
           (mapcar (lambda (file)
@@ -134,20 +135,26 @@
       (start-process "*Messages*" nil "afplay" path)
     (start-process "*Messages*" nil "aplay" path)))
 
+;;;###autoload
 (defun c-c-combo--play-announcer-sound ()
   "This will end when our list ends."
   (let ((current-sound (pop c-c-combo--announcer-files-path)))
     (when current-sound
       (c-c-combo--play-sound-file current-sound))))
 
+;;;###autoload
 (defun c-c-combo--encourage-user ()
   (when (and (not (equal c-c-combo--counter 0))
              (equal (mod c-c-combo--counter 5) 0))
     (c-c-combo--play-announcer-sound))
   (when (equal c-c-combo--counter 15)
+    ;; (if selectric-mode
+    ;;     nil
+    ;;   (selectric-mode))
     (add-hook 'post-self-insert-hook #'c-c-combo--animate-insertion))
   (setq c-c-combo--counter (1+ c-c-combo--counter)))
 
+;;;###autoload
 (defun c-c-combo--check-if-over-target-rate ()
   (let ((n-repeats (assoc-default "n-repeats" c-c-combo--last-key))
         (computed-cps (c-c-combo--compute-cps)))
@@ -155,11 +162,14 @@
     (if (and (< n-repeats 3)
              (> computed-cps c-c-combo--target-cps))
         (c-c-combo--encourage-user)
-      (get-announcer-file-paths)
+      (c-c-combo-get-announcer-file-paths)
       (remove-hook 'post-self-insert-hook #'c-c-combo--animate-insertion)
+      ;; (when selectric-mode
+      ;;   (selectric-mode -1))
       (setq c-c-combo--counter 0))))
 
 
+;;;###autoload
 (defun c-c-combo--compute-cps ()
   (let* ((now        (c-c-combo--current-time-in-seconds))
          (last-time  (assoc-default "timestamp" c-c-combo--last-key))
@@ -170,6 +180,7 @@
          (new-rate (* c-c-combo--curr-cps decay-factor)))
     new-rate))
 
+;;;###autoload
 (defun c-c-combo--process ()
   (with-demoted-errors "Error while running C-c combo: %s"
     (when (and (this-command-keys)
@@ -183,8 +194,7 @@
         (setq c-c-combo--curr-cps new-rate
               c-c-combo--last-key `(("timestamp" . ,now)
                                     ("key"       . ,key)
-                                    ("n-repeats" . ,(if repeated? (1+ n-repeats) 0)))
-              )))))
+                                    ("n-repeats" . ,(if repeated? (1+ n-repeats) 0))))))))
 
 ;;;###autoload
 (defun c-c-combo--activate ()
