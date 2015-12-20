@@ -129,20 +129,17 @@
          (chars-per-sec (/ chars-per-min 60.0)))
     chars-per-sec))
 
-;;;###autoload
 (defun c-c-combo--play-sound-file (path)
   (if (eq system-type 'darwin)
       (start-process "*Messages*" nil "afplay" path)
     (start-process "*Messages*" nil "aplay" path)))
 
-;;;###autoload
 (defun c-c-combo--play-announcer-sound ()
   "This will end when our list ends."
   (let ((current-sound (pop c-c-combo--announcer-files-path)))
     (when current-sound
       (c-c-combo--play-sound-file current-sound))))
 
-;;;###autoload
 (defun c-c-combo--encourage-user ()
   (when (and (not (equal c-c-combo--counter 0))
              (equal (mod c-c-combo--counter 5) 0))
@@ -154,7 +151,6 @@
     (add-hook 'post-self-insert-hook #'c-c-combo--animate-insertion))
   (setq c-c-combo--counter (1+ c-c-combo--counter)))
 
-;;;###autoload
 (defun c-c-combo--check-if-over-target-rate ()
   (let ((n-repeats (assoc-default "n-repeats" c-c-combo--last-key))
         (computed-cps (c-c-combo--compute-cps)))
@@ -169,7 +165,6 @@
       (setq c-c-combo--counter 0))))
 
 
-;;;###autoload
 (defun c-c-combo--compute-cps ()
   (let* ((now        (c-c-combo--current-time-in-seconds))
          (last-time  (assoc-default "timestamp" c-c-combo--last-key))
@@ -180,7 +175,6 @@
          (new-rate (* c-c-combo--curr-cps decay-factor)))
     new-rate))
 
-;;;###autoload
 (defun c-c-combo--process ()
   (with-demoted-errors "Error while running C-c combo: %s"
     (when (and (this-command-keys)
@@ -196,7 +190,6 @@
                                     ("key"       . ,key)
                                     ("n-repeats" . ,(if repeated? (1+ n-repeats) 0))))))))
 
-;;;###autoload
 (defun c-c-combo--activate ()
   "Activates Combo mode."
   (setq c-c-combo-check-timer (run-at-time
@@ -205,13 +198,11 @@
                                'c-c-combo--check-if-over-target-rate))
   (add-hook 'pre-command-hook #'c-c-combo--process))
 
-;;;###autoload
 (defun c-c-combo--deactivate ()
   "Deactivates Combo mode, and deletes timer."
   (remove-hook 'pre-command-hook #'c-c-combo--process)
   (cancel-timer c-c-combo-check-timer))
 
-;;;###autoload
 (defun c-c-combo--toggle ()
   "Toggle Combo mode."
   (interactive)
