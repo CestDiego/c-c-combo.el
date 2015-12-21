@@ -46,8 +46,7 @@
 (defvar c-c-combo--counter 0
   "Stores how many seconds you have been with acceptable wpm")
 
-;; (defconst c-c-combo--files-path (file-name-directory load-file-name))
-(setq c-c-combo--files-path "/home/jarvis/Projects/c-c-combo.el/")
+(defconst c-c-combo--files-path (file-name-directory load-file-name))
 (defvar c-c-combo--announcer-files-path '()
   "Paths for the announcer sound files")
 
