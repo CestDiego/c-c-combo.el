@@ -1,0 +1,12 @@
+* c-c-combo.el
+
+#+BEGIN_HTML
+<a href='http://www.recurse.com' title='Made with love at the Recurse Center'><img src='https://cloud.githubusercontent.com/assets/2883345/11325206/336ea5f4-9150-11e5-9e90-d86ad31993d8.png' height='20px'/></a>
+#+END_HTML
+
+[[https://github.com/syl20bnr/spacemacs][file:https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg]]
+
+This package lets you have some kind of encouragement if you are typing fast, it
+has some unreal tournament sounds, and after 15 seconds of mantaining your WPM,
+an animation for each insertion will appear. Then it will enable selectric-mode,
+and highlight trail (WIP) package randomly.
