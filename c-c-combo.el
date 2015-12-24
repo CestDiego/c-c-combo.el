@@ -1,4 +1,4 @@
-;;; c-c-combo.el --- Make stuff happen when you reach a target wpm -*- lexical-binding: nil -
+;;; c-c-combo.el --- Make stuff happen when you reach a target wpm -*- lexical-binding: nil -*-
 ;; Copyright (C) 2015  Diego Berrocal
 
 ;; Author: Diego Berrocal <cestdiego@gmail.com>
